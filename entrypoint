@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# start crond service to schedule update-record peridically
+crond -l 9
+
+# immediately update record at startup
+./update-record > /dynhost/records.log
+
+# display records changelog
+tail -f records.log
