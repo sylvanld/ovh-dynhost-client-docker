@@ -1,0 +1,9 @@
+version: "3.4"
+
+services:
+  update-record:
+    build: .
+    environment:
+      HOSTNAME: "home.sylvan.ovh"
+      IDENTIFIER: "sylvan.ovh-home"
+      PASSWORD: "*Nc27ZeYUNGRuh7"

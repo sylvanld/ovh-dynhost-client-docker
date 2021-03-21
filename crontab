@@ -1,0 +1,4 @@
+# min   hour    day     month   weekday command
+
+# update DynHost records every minutes
+*       *       *       *       *       /dynhost/update-record >> /dynhost/records.log
