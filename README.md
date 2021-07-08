@@ -8,9 +8,8 @@ Docker container to automatically update DynHost records with your public IP add
 
 2 - Using information from the previous step, run DynHost client container to continuously update your DNS record.
 
-E.G using docker compose.
+### Using docker compose.
 
-*compose file*
 ```yaml
 version: "3"
 
@@ -22,6 +21,29 @@ services:
       IDENTIFIER: "<domain>-<suffix>"
       PASSWORD: "<password>"
 ```
+
+### Using kubernetes
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dynhost-updater
+spec:
+  containers:
+    - name: dynhost-updater
+      image: sylvanld/update-ovh-dynhost
+      env:
+        - name: HOSTNAME
+          value: "<host>.<domain>"
+        - name: IDENTIFIER
+          value: "<domain>-<suffix>"
+        - name: PASSWORD
+          value: "<password>"
+```
+
+### Environment variables
+
 
 *Following environment variables are mandatory* :
 - **HOSTNAME**: Subdomain on which DNS record must be updated dynamically.
