@@ -47,10 +47,9 @@ spec:
 
 ### Environment variables
 
-
-*Following environment variables are mandatory* :
-- **HOSTNAME**: Subdomain on which DNS record must be updated dynamically.
-- **IDENTIFIER**: DynHost management username.
-- **PASSWORD**: DynHost management password.
-- **LOG_LEVEL**: String used to configure verbosity (must be one of: 'debug', 'info', 'error')
-- 
+|Variable|Description|Is required?|Default|
+|-|-|-|-|
+|HOSTNAME|Subdomain on which DNS record must be updated dynamically.|**Yes**|-|
+|IDENTIFIER|DynHost management username.|**Yes**|-|
+|PASSWORD|DynHost management password.|**Yes**|-|
+|LOG_LEVEL|String used to configure verbosity (must be one of: 'debug', 'info', 'error')|No|debug|
