@@ -20,6 +20,7 @@ services:
       HOSTNAME: "<host>.<domain>"
       IDENTIFIER: "<domain>-<suffix>"
       PASSWORD: "<password>"
+      LOG_LEVEL: "debug"
 ```
 
 ### Using kubernetes
@@ -40,12 +41,15 @@ spec:
           value: "<domain>-<suffix>"
         - name: PASSWORD
           value: "<password>"
+        - name: LOG_LEVEL
+          value: "debug"
 ```
 
 ### Environment variables
 
-
-*Following environment variables are mandatory* :
-- **HOSTNAME**: Subdomain on which DNS record must be updated dynamically.
-- **IDENTIFIER**: DynHost management username.
-- **PASSWORD**: DynHost management password.
+|Variable|Description|Is required?|Default|
+|-|-|-|-|
+|HOSTNAME|Subdomain on which DNS record must be updated dynamically.|**Yes**|-|
+|IDENTIFIER|DynHost management username.|**Yes**|-|
+|PASSWORD|DynHost management password.|**Yes**|-|
+|LOG_LEVEL|String used to configure verbosity (must be one of: 'debug', 'info', 'error')|No|info|
