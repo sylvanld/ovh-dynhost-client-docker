@@ -1,66 +1,53 @@
+
 # This is a basic workflow to help you get started with Actions
 
-name: Build and publish
+name: Docker Continuous Delivery
 
-# Controls when the action will run. 
-on:  
-  release:
-     types:
+on:
+  release: # only run when a new release is created
+    types:
       - created
-      
+
 env:
-  DOCKER_IMAGE_NAME: sylvanld/update-ovh-dynhost  
+  DOCKER_REGISTRY_URL: docker.io
+  DOCKER_IMAGE_NAME: sylvanld/update-ovh-dynhost
   RELEASE_TAG: ${GITHUB_REF/refs\/tags\//}
-  
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# Jobs triggered on workflow run.
 jobs:
-  # This workflow contains a single job called "build"
-  build-amd:
-    # The type of runner that the job will run on
+  build-and-release-docker:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-            
-      - name: Login to DockerHub
-        uses: docker/login-action@v1 
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v2.3.0
-        with:
-          tags: ${{secrets.DOCKER_REGISTRY_URL}}/${{ env.IMAGE_NAME }}:latest,${{secrets.DOCKER_REGISTRY_URL}}/${{ env.IMAGE_NAME }}:${{ env.RELEASE_TAG }}
-          push: true
       
+      - name: Login to docker registry      
+        run: echo -n "${{secrets.DOCKER_PASSWORD}}" | docker login --username "${{secrets.DOCKER_USERNAME}}" --password-stdin ${{env.DOCKER_REGISTRY_URL}}
+      
+      # Install QEMU to emulate different architecture (required to use buildx for ARM)
+      - name: Set up QEMU
+        if: success()
+        uses: docker/setup-qemu-action@v1
+
+      # Install docker buildx to build image for multiple architectures
+      - name: Docker Setup Buildx
+        if: success()
+        uses: docker/setup-buildx-action@v1.3.0
+        with:
+          # Buildx version. (eg. v0.3.0)
+          version: v0.3.0
+          
+      # build and publish image for multiple architectures
+      - name: Build and publish
+        if: success()
+        run: docker buildx build --platform linux/amd64,linux/arm64 --output type=image,push=true -t ${{env.DOCKER_REGISTRY_URL}}/${{env.DOCKER_IMAGE_NAME }}:${{ env.RELEASE_TAG }} -t ${{env.DOCKER_REGISTRY_URL}}/${{env.DOCKER_IMAGE_NAME }}:latest .
+
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v2.1.0
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKERHUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           DOCKERHUB_REPOSITORY: ${{secrets.DOCKER_REGISTRY_URL}}/${{ env.DOCKER_IMAGE_NAME }}
-  
-         
-  build-arm:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v2
+        
       
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-    
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to docker registry
-        if: success()      
-        run: echo -n "${{secrets.DOCKER_PASSWORD}}" | docker login --username "${{secrets.DOCKER_USERNAME}}" --password-stdin ${{secrets.DOCKER_REGISTRY_URL}}
-
-      - name: Build and publish docker image
-        if: success()    
-        run: docker buildx build --platform linux/arm/v8 --output type=image,push=true -t ${{secrets.DOCKER_REGISTRY_URL}}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.RELEASE_TAG }}-arm64v8 .  
