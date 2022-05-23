@@ -3,8 +3,11 @@ exec 3>&1
 
 # get int value for given log level debug=>10, info=>20, error=>40
 get_log_level_value(){
-    level=10
+    level=20
     case $1 in
+        debug)
+        level=10
+    ;;
         info)
         level=20
     ;;
