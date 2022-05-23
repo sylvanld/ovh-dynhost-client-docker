@@ -1,24 +1,57 @@
 #!/bin/sh
+exec 3>&1
 
-# check that required input are properly set
+# get int value for given log level debug=>10, info=>20, error=>40
+get_log_level_value(){
+    level=10
+    case $1 in
+        info)
+        level=20
+    ;;
+        error)
+        level=40
+    ;;
+    esac
+    echo $level
+}
+
+# functions used to display logs
+log(){
+    log_level_value=$(get_log_level_value $1)
+    if [ $log_level_value -ge $current_level_value ]
+    then
+    echo "{\"date\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\", \"level\": \"$1\", $levelvalue \"message\": \"$2\"}" 1>&3
+    fi
+}
+debug(){ log debug "$1"; }
+info(){ log info "$1"; }
+error(){ log error "$1"; }
+
+# validate inputs and set defaults
+
 [ -z $HOSTNAME ] && echo You need to set environment variable HOSTNAME && exit
 [ -z $IDENTIFIER ] && echo You need to set environment variable IDENTIFIER && exit
 [ -z $PASSWORD ] && echo You need to set environment variable PASSWORD && exit
+[ -z $LOG_LEVEL ] && LOG_LEVEL=debug
+
+# set current log level, all logs with a lower level are filtered
+current_level_value=$(get_log_level_value $LOG_LEVEL)
 
 # retrieve last known (cached) address and current public address
-CACHED_IP_ADDRESS=$(cat /dynhost/cached_address 2>/dev/null)
+CACHED_IP_ADDRESS=$(cat /dynhost/.cache/ip_address 2>/dev/null)
 PUBLIC_IP_ADDRESS=$(dig @resolver4.opendns.com myip.opendns.com +short)
 
 # compare current address to cached one to avoid useless updates
 if [ "$CACHED_IP_ADDRESS" != "$PUBLIC_IP_ADDRESS" ]
 then
-    echo "$(date +"%Y-%m-%d/%T") - INFO - Cached address changed from '$CACHED_IP_ADDRESS' to '$PUBLIC_IP_ADDRESS'"
+    info "Cached address changed from '$CACHED_IP_ADDRESS' to '$PUBLIC_IP_ADDRESS'"
     # update DynHost record using OVH API
     ovh_response=$(curl -sS "http://www.ovh.com/nic/update?system=dyndns&hostname=${HOSTNAME}&myip=${PUBLIC_IP_ADDRESS}" \
         -H "Authorization: Basic $(echo -n $IDENTIFIER:$PASSWORD | base64)")
-    echo "$(date +"%Y-%m-%d/%T") - INFO - OVH response: ${ovh_response}"
+    debug "OVH response: ${ovh_response}"
     # cache address for comparison, to avoid useless updates
-    echo $PUBLIC_IP_ADDRESS > cached_address
+    mkdir -p .cache/
+    echo $PUBLIC_IP_ADDRESS > /dynhost/.cache/ip_address
 else
-    echo "$(date +"%Y-%m-%d/%T") - DEBUG  - No changes detected"
+    debug "No changes detected"
 fi
