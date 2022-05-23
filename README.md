@@ -52,4 +52,4 @@ spec:
 |HOSTNAME|Subdomain on which DNS record must be updated dynamically.|**Yes**|-|
 |IDENTIFIER|DynHost management username.|**Yes**|-|
 |PASSWORD|DynHost management password.|**Yes**|-|
-|LOG_LEVEL|String used to configure verbosity (must be one of: 'debug', 'info', 'error')|No|debug|
+|LOG_LEVEL|String used to configure verbosity (must be one of: 'debug', 'info', 'error')|No|info|
